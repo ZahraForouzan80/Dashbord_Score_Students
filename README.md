@@ -30,3 +30,6 @@ Pandas
 Plotly Express
  برای رسم نمودارها
 
+
+برای اجرا کردن:
+py -m streamlit score_dashbord.py
