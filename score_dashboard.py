@@ -197,9 +197,58 @@ elif sidebar1 == 'ویرایش یا حذف دانشجو':
 #صفحه اضافه کردن دیتابیس csv------------------------------------------------------------------------------------------------------------
 elif sidebar1 == 'اضافه کردن دیتابیس مورد نظر':
     st.markdown("<h2 style='text-align:center;'>اضافه کردن دیتابیس مورد نظر و دیدن نتایج </h2>", unsafe_allow_html=True)  
-    
+
+        #اپلود فایل
+    uploaded_file = st.file_uploader("فایل CSV مورد نظر را وارد کنید" , type="csv")
+
+    if uploaded_file:
+        file_csv = pd.read_csv(uploaded_file)
+        st.success("فایل با موفقیت آپلود شد!")
+        
+        total_students = len(file_csv)
+        avg_moadel = round(file_csv['moadel'].mean(), 2)
+        max_moadel = file_csv['moadel'].max()
+        min_moadel = file_csv['moadel'].min()
+
+        col1, col2, col3, col4 = st.columns(4)
+        col1.markdown(f"<div style='background-color:#b0b0b0; padding:20px; border-radius:10px; text-align:center; color:black'><p>کل دانشجویان</p><p>{total_students}</p></div>", unsafe_allow_html=True)
+        col2.markdown(f"<div style='background-color:#b0b0b0; padding:20px; border-radius:10px; text-align:center; color:black'><p>میانگین معدل</p><p>{avg_moadel}</p></div>", unsafe_allow_html=True)
+        col3.markdown(f"<div style='background-color:#b0b0b0; padding:20px; border-radius:10px; text-align:center; color:black'><p>بهترین معدل</p><p>{max_moadel}</p></div>", unsafe_allow_html=True)
+        col4.markdown(f"<div style='background-color:#b0b0b0; padding:20px; border-radius:10px; text-align:center; color:black'><p>کمترین معدل</p><p>{min_moadel}</p></div>", unsafe_allow_html=True)
+
+        st.subheader(" دیتابیس مورد نطر")
+        st.dataframe(file_csv)
+
+        all_columns = file_csv.columns.tolist()
+        numeric_cols = file_csv.select_dtypes(include='number').columns.tolist()
+        x_axis = st.selectbox("محور X را مطابق با دسته بندی مورد نظر انتخاب کنید" , all_columns)
+
+        if numeric_cols:
+           y_axis = st.selectbox("لطفا محور Y را انتخاب کنید", numeric_cols)
+        else:
+           st.warning("فایل CSV شما ستون عددی ندارد!")
+
+
+        st.subheader("لطفا نوع نمودار خود را انتخاب کنید!")
+        char_type = st.radio("انتخاب کنید:",["نمودار میله ای" , "نمودار دایره ای"])
+
+
+        #نمایش نمودارها
+
+        if char_type == "نمودار میله ای":
+            st.subheader("نمودار میله ای")
+            fig = px.bar(file_csv , x = x_axis , y = y_axis , color = x_axis)
+            st.plotly_chart(fig, use_container_width=True)
+
+        elif char_type == "نمودار دایره ای":
+            st.subheader("نمودار دایره ای")
+            fig = px.pie(file_csv, names = x_axis, values = y_axis, title = f"{y_axis} by {x_axis}")
+            st.plotly_chart(fig, use_container_width=True)  
+
+
 
 
 #صفحه هشدار ها برای الگوریتم تشخیص ناهنجاری------------------------------------------------------------------------------------------------------------
 elif sidebar1 == 'هشدارها':
     st.markdown("<h2 style='text-align:center;'>تشخیص دانشجویان با الگوهای ناهنجاری</h2>", unsafe_allow_html=True)
+
