@@ -284,7 +284,6 @@ elif sidebar1 == 'اضافه کردن دیتابیس مورد نظر':
 
         if numeric_cols:
             col_for_analysis = st.selectbox("ستون عددی برای تشخیص ناهنجاری انتخاب کنید", analysis_columns, index=0)
-            from sklearn.ensemble import IsolationForest
 
 
             # مدل یادگیری ماشین برای ناهنجاری
@@ -358,4 +357,5 @@ elif sidebar1 == 'هشدارها':
             fig = px.bar(read_from_db,x="name",y="moadel",color="وضعیت",color_discrete_map={"نرمال": "blue", "ناهنجار": "red"},
             title="تشخیص ناهنجاری معدل")
             st.plotly_chart(fig, use_container_width=True)
+
 
