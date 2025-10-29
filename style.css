@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap');
+
+body, html {
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: honeydew;
+    color: black;
+    direction: rtl;
+}
+
+/*  عنوان ها  */
+h1, h2, h3, h4 {
+    font-family: 'Vazirmatn', sans-serif;
+    text-align: center;
+    color: seagreen;
+    margin-bottom: 20px;  /* فاصله از المان بعدی */
+}
+
+/* استایل کارت های آماری  */
+.card_css {
+    background-color: #E8F5E9;
+    text-align: center;
+    padding: 15px;
+    margin-bottom: 20px;  /* فاصله بین کارت‌ها */
+    color: black;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.card_css:hover {
+    transform: scale(1.02);
+}
+
+/* ورودی‌های فرم */
+.stTextInput > div > div > input,
+.stNumberInput input {
+    background-color: #f9f9f9;
+    border: 1px solid #d6d6d6;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 15px;
+    text-align: right; /* متن داخل فیلد راست‌چین */
+    transition: 0.3s ease;
+    width: 100%;
+}
+
+.stTextInput > div > div > input:focus,
+.stNumberInput input:focus {
+    border: 1px solid #3498db;
+    background-color: #f0f8ff;
+    box-shadow: 0 0 6px rgba(52, 152, 219, 0.3);
+    text-align: right;
+}
+
+/* فاصله بین فیلدها */
+.stTextInput, .stNumberInput, .stSelectbox {
+    margin-bottom: 20px;
+}
+
+
+/* دکمه ارسال */
+div.stButton > button {
+    background: linear-gradient(135deg, #007BFF, #0056b3);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 30px;
+    font-size: 16px;
+    transition: 0.3s ease;
+    cursor: pointer;
+    width: 100%;
+}
+
+div.stButton > button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #0056b3, #007BFF);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+/* پیام موفقیت */
+.stSuccess {
+    background-color: #e9f7ef !important;
+    color: #1e8449 !important;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* راست‌چین کردن لیبل‌ها و placeholder ها */
+label, .css-1aumxhk, .css-1xhj18k {  
+    text-align: right;
+    display: block;
+}
+
+/* کارت نمودار و ناهنجاری‌ها */
+.stPlotlyChart > div {
+    margin-bottom: 20px;
+}
