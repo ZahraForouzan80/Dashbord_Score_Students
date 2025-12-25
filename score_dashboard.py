@@ -117,7 +117,7 @@ if sidebar_menu == "صفحه‌ٔ اصلی | گزارش کلی سیستم":
 
 #************صفحه اضافه کردن دیتابیس csv************************           
 elif sidebar_menu == "مدیریت و بارگذاری پایگاه‌داده‌ها":
-    st.markdown("<h2>دیتابیس خود را آپلود کنید و نتایج تحلیلی را مشاهده کنید!</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>پایگاه داده خود را آپلود کنید و نتایج تحلیلی را مشاهده کنید!</h2>", unsafe_allow_html=True)
 
     #آپلود فایل CSV
     upload_file = st.file_uploader("فایل CSV مورد نظر را وارد کنید" , type="csv")
@@ -132,10 +132,25 @@ elif sidebar_menu == "مدیریت و بارگذاری پایگاه‌داده�
             "Full_Name": ["Full_Name", "نام", "Name", "student_name"],
             "Student_ID": ["Student_ID", "شماره دانشجویی", "ID"],
             "Semester": ["Semester", "ترم", "Term"],
-            "Grade":["Grade", "نمره"]
+            "Grade": ["Grade", "نمره","Religion", "دینی", "معارف","Kurdish", "کردی",
+                      "Arabic", "عربی","English", "انگلیسی","Math", "Mathematics", "ریاضی",
+                      "Computer", "کامپیوتر", "رایانه","Science", "علوم","Social", "اجتماعی",
+                      "Physics", "فیزیک","Chemistry", "شیمی","Biology", "زیست","History", "تاریخ","Geography", "جغرافیا",
+                      "Literature", "ادبیات","Persian", "فارسی","Statistics", "آمار"]
         }
 
-        #این تابع ستونی که با یکی از نام‌های احتمالی مطابقت دارد را پیدا می‌کند
+        def find_grade_columns(df, grade_names):
+            grade_cols = []                  #لیست خالی برای ذخیره ستون‌های نمره
+            for col in df.columns:           #روی تک‌تک ستون‌های فایل CSV حرکت می‌کنه
+                for name in grade_names:     #وی تمام اسم‌های ممکن درس‌ها (ریاضی،عربی، …)
+                    if name.lower() in col.lower():    #بدون حساسیت به حروف بزرگ/کوچک
+                        if col not in grade_cols:      #از تکراری شدن جلوگیری می‌کنه
+                            grade_cols.append(col)
+                            break
+            return grade_cols
+
+        
+         #این تابع ستونی که با یکی از نام‌های احتمالی مطابقت دارد را پیدا می‌کند
         def find_column(df, possible_names):
             for name in possible_names:
                 for col in df.columns:
@@ -143,11 +158,22 @@ elif sidebar_menu == "مدیریت و بارگذاری پایگاه‌داده�
                         return col
             return None                                 #گر ستون پیدا نشود، None برمی‌گردد
 
+
         #هر ستون مهم را با تابع بالا پیدا می‌کنیم و در یک متغیر ذخیره می‌کنیم.
         gpa_col = find_column(file_csv, name_map["GPA"])
         name_col = find_column(file_csv, name_map["Full_Name"])
         id_col = find_column(file_csv, name_map["Student_ID"])
         semester_col = find_column(file_csv, name_map["Semester"])
+        grade_columns = find_grade_columns(file_csv, name_map["Grade"])
+        
+        numeric_cols = file_csv.select_dtypes(include="number").columns.tolist()  #فقط ستون‌هایی که عددی هستن
+        grade_columns = [c for c in grade_columns if c in numeric_cols and c != gpa_col]
+
+        # اگر درسی پیدا نشد
+        if not grade_columns:
+            st.error("هیچ ستون نمره‌ای شناسایی نشد.")
+            st.stop()
+
 
         # بررسی ستون‌های ضروری
         if gpa_col is None:
@@ -164,95 +190,93 @@ elif sidebar_menu == "مدیریت و بارگذاری پایگاه‌داده�
             col2.markdown(f"<div class='card_css'><h4>میانگین معدل</h4><p>{avg_GPA}</p></div>", unsafe_allow_html=True)
             col3.markdown(f"<div class='card_css'><h4>بیشترین معدل</h4><p>{max_GPA}</p></div>", unsafe_allow_html=True)
             col4.markdown(f"<div class='card_css'><h4>کمترین معدل</h4><p>{min_GPA}</p></div>", unsafe_allow_html=True)
-            
-            
-            #مدیریت و نمایش نمودارها
-            all_columns = file_csv.columns.tolist()  # #متد tolist() = تبدیل Index یا آرایه به یک لیست پایتون معمولی
-            column_that_has_number = file_csv.select_dtypes(include='number').columns.tolist()    #انتخاب ستون‌هایی که نوع داده‌شان عددی است (int, float)
 
-
-            column1_select , column2_select = st.columns(2)
-            with column1_select:
-                mehvar_x= st.selectbox("محور افقی را مطابق با دسته بندی مورد نظر جهت نمایش نمودار مورد نظر انتخاب کنید" , all_columns)
-                
-                if column_that_has_number:
-                    mehvar_y = st.selectbox("لطفا محور عمودی را جهت نمایش نمودار مورد نظر انتخاب کنید", column_that_has_number)
-                else:
-                     st.warning("فایل CSV شما ستون عددی ندارد!")  
+            
+            selected_course = st.selectbox("درس مورد نظر خود را انتخاب کنید:",
+                options=sorted(grade_columns)
+                ) 
             
 
-            with column2_select:
-                st.subheader("لطفا نوع نمودار مورد نظر خود را انتخاب کنید!")
-                char_type = st.radio(" نمودارهای موجود:",["نمودار میله‌ای" , "نمودار دایره‌ای"])
-
-              
-            
             #نمایش نمودار
-            if char_type == "نمودار میله‌ای":
-                st.subheader("نمودار میله‌ای جهت نمایش پایگاه داده شما")
-                fig = plotly.bar(file_csv, x= mehvar_x, y= mehvar_y, color= mehvar_x)    #هر ستون متفاوت بر اساس مقدار محور x
-                st.plotly_chart(fig, use_container_width= True)
+            fig = plotly.histogram(file_csv, x=selected_course)
+            fig.update_layout(title=f"هیستوگرام نمرات درس {selected_course}",xaxis_title="نمره",yaxis_title="تعداد دانشجویان")
+            st.plotly_chart(fig, use_container_width=True)
 
-            elif char_type == "نمودار دایره‌ای":
-                st.subheader("نمودار دایره‌ای جهت نمایش پایگاه داده شما")   
-                fig = plotly.pie(file_csv, names= mehvar_x, values=mehvar_y)
-                st.plotly_chart(fig, use_container_width= True) 
-           
-            # نمایش جدول دیتابیس فرستاده شده
-            st.subheader("جدول اطلاعات")
-            st.dataframe(file_csv)
 
+            column1_baze, column2_baze = st.columns(2)
+            with column1_baze:
+                # دریافت بازه دلخواه از کاربر
+                min_input = st.number_input("عدد شروع بازه:", min_value=0, max_value=100, value=0)
+            with column2_baze:
+                max_input = st.number_input("عدد پایان بازه:", min_value=0, max_value=100, value=100)
+
+            # فیلتر کردن دانشجویان در بازه مشخص شده
+            students_in_range = file_csv[(file_csv[selected_course] >= min_input) & (file_csv[selected_course] <= max_input)]
+
+            # نمایش جدول
+            st.subheader(f"دانشجویان درس {selected_course} با نمره بین {min_input} تا {max_input}")
+            st.dataframe(students_in_range)
 
 
             #*****تشخیص ناهنجاری با Isolation Forest*****
-            column_has_number = file_csv.select_dtypes(include='number').columns.tolist()
+            col1_normally, col2_normally, col3_normally, col4_normally  = st.columns(4)
+            with col1_normally:
+                if numeric_cols:
+                    anomaly_column_option = st.radio("ستون انتخابی برای محاسبه ناهنجاری:",
+                                                     ("معدل (GPA)", "نمره (Grade)"))
+                    
+            with col2_normally:
+                missing_option = st.radio("روش برخورد با داده‌های خالی:", 
+                              ("جایگزینی با 0", "پر کردن با میانگین/میانه"))
+                
+            with col3_normally:    
+                anormally_choose = st.radio("انتخاب روش محاسبه ناهنجاری:",("روش آماری","Isolation Forest"))
 
-            if column_has_number:
-                #اگر ستون "معدل" هست، انتخاب می‌کنیم، وگرنه اولین ستون عددی
-                #معدل اول برای پیدا کردن نام ستون در دیتابیس هست و دومی برای تعیین ستون برای عملیات بعدی
-                default_column = "GPA" if "GPA" in column_has_number else column_has_number[0]
-              
-                #مدل یادگیری ماشین برای ناهنجاری
-                model = IsolationForest(contamination=0.3, random_state= 42)
+            with col4_normally:
+                    char_type = st.radio("نوع نمودار مورد نظر:",["هیستوگرام","نمودار میله‌ای"])
+    
+            if anomaly_column_option == "معدل (GPA)":
+                default_column = gpa_col   
+            else:
+                default_column = selected_course
+
+            if missing_option == "جایگزینی با 0":
+                file_csv[default_column] = file_csv[default_column].fillna(0)
+            else:
+                # جایگزینی با میانگین یا میانه
+                median_val = file_csv[default_column].median()
+                file_csv[default_column] = file_csv[default_column].fillna(median_val)    
+
+            if anormally_choose == "روش آماری":
+                mean_val = file_csv[default_column].mean()
+                std_val = file_csv[default_column].std()
+                file_csv["وضعیت"] = np.where(abs(file_csv[default_column] - mean_val) > 2*std_val, "ناهنجار", "نرمال")
+            else:
+                # انتخاب درصد ناهنجاری
+                model = IsolationForest(contamination='auto', random_state=42)
                 model.fit(file_csv[[default_column]])
+
 
                 file_csv["وضعیت"] = model.predict(file_csv[[default_column]])
                 file_csv["وضعیت"] = file_csv["وضعیت"].map({1: "نرمال", -1: "ناهنجار"})
 
-                # predict() = وضعیت هر نمونه (نرمال یا ناهنجار) را پیش‌بینی می‌کند
-                #fit() = مدل را روی داده آموزش می‌دهد
-                #map = ستون "وضعیت" به متن فارسی تبدیل می‌شود تا کاربر راحتتر بفهمد
-                
-                # شمارش ناهنجاری ها
-                nahanjar = file_csv[file_csv["وضعیت"] == "ناهنجار"]
-                st.markdown(f"<div class='card_css'><h4>تعداد ناهنجاری‌ها</h4><p>{len(nahanjar)}</p></div>", unsafe_allow_html=True)
+            nahanjar = file_csv[file_csv["وضعیت"] == "ناهنجار"]
+            st.markdown(f"<div class='card_css'><h4>تعداد ناهنجاری‌ها</h4><p>{len(nahanjar)}</p></div>", unsafe_allow_html=True)
 
-                col1_nahanjar, col2_nahanjar = st.columns(2)
+            if char_type == "هیستوگرام":
+                fig_anormally = plotly.histogram(file_csv, x=default_column, color="وضعیت",
+                                color_discrete_map={"نرمال":"blue", "ناهنجار":"red"})
+                st.plotly_chart(fig_anormally, use_container_width=True) 
+            else:
+                df_counts = file_csv.groupby([default_column, "وضعیت"]).size().reset_index(name="تعداد")
+                fig_anormally = plotly.bar(df_counts, x=default_column, y="تعداد", color="وضعیت",
+                     color_discrete_map={"نرمال": "blue", "ناهنجار": "red"})
+                st.plotly_chart(fig_anormally, use_container_width=True)
 
-                with col1_nahanjar:
-                    # انتخاب محور X و Y برای نمودار
-                    x_axis = st.selectbox("انتخاب محور افقی نمودار ناهنجاری", column_has_number)
-                    y_axis = st.selectbox("انتخاب محور عمودی نمودار ناهنجاری", column_has_number)
-                                       
-
-                with col2_nahanjar:
-
-                    # نمودار ناهنجاری‌ها
-                    st.subheader("نمودار ناهنجاری‌ها")
-                    fig_anomaly = plotly.bar(file_csv, x=x_axis , y=y_axis, color="وضعیت",
-                                color_discrete_map={"نرمال": "blue", "ناهنجار": "red"})
-                    st.plotly_chart(fig_anomaly, use_container_width=True)  
-                
-                
-                # جدول ناهنجاری‌ها
-                st.subheader("جدول ناهنجاری‌ها")
-                st.dataframe(nahanjar)
+            st.subheader("جدول ناهنجاری‌ها")
+            st.dataframe(nahanjar)    
     else:
-        st.info("یک فایل csv آپلود کنید!!!")
-
-                
-
-
+        st.info("یک فایل csv آپلود کنید!!!")    
 
 #************صفحه اضافه کردن دانشجو************************           
 elif sidebar_menu == "ثبت دانشجو جدید":
@@ -333,6 +357,7 @@ elif sidebar_menu == "ویرایش / حذف اطلاعات دانشجویان":
 
                 #if_exists="append" یعنی اگر جدول وجود داشت، داده‌ها به آن اضافه شود. چون قبلاً جدول را پاک کردیم، این عمل جدول جدیدی ایجاد می‌کند.
                 #index=False یعنی شماره ردیف DataFrame به عنوان ستون در دیتابیس ذخیره نشود.
+                #عمل اضافه کردن به دیتابیس توسط pandas و SQLAlchemy پشت صحنه انجام می‌شود(با to_sql)
                 final_df.to_sql("database_project_for_students", connecting_to_database, if_exists="append", index=False)
                 st.success("✅ تغییرات با موفقیت ذخیره شدند!")
         
@@ -369,14 +394,12 @@ elif sidebar_menu == "هشدارها و تحلیل ناهنجاری‌ها":
     else:
         field = st.selectbox("فیلد برای تحلیل ناهنجاری:", ["GPA", "Grade"])
 
-        num_std = st.slider("تعداد انحراف معیار برای ناهنجاری:", 0.5, 3.0, 1.0, 0.1)
-
         # محاسبه میانگین و انحراف معیار معدل
         mean_val = read_from_database[field].mean()
         std_val = read_from_database[field].std()
 
-        lower = mean_val - num_std  * std_val    #حدود 1 انحراف معیار دور از میانگین
-        upper = mean_val + num_std  * std_val
+        lower = mean_val - 1  * std_val    #حدود 1 انحراف معیار دور از میانگین
+        upper = mean_val + 1  * std_val
 
         # پیدا کردن دانشجویان ناهنجار
         anomalies = read_from_database[(read_from_database[field] < lower) | (read_from_database[field] > upper)]  #| عملگر OR منطقی در pandas 
