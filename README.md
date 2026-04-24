@@ -27,5 +27,6 @@ Plotly Express
 
 
 برای اجرا کردن:
+
 pip install streamlit pandas plotly
 py -m streamlit App_Score_Students_Dashbord.py
